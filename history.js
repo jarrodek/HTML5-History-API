@@ -55,9 +55,15 @@
   // new instance of 'History'. The default is a reference to the original object instance
   var historyObject = windowHistory;
   // symlink to method 'history.pushState'
-  var historyPushState = windowHistory.pushState;
+  var historyPushState;
+  try {
+    historyPushState = windowHistory.pushState;
+  } catch (e) {};
   // symlink to method 'history.replaceState'
-  var historyReplaceState = windowHistory.replaceState;
+  var historyReplaceState;
+  try {
+    historyReplaceState = windowHistory.replaceState;
+  } catch (e) {};
   // if the browser supports HTML5-History-API
   var isSupportHistoryAPI = isSupportHistoryAPIDetect();
   // verifies the presence of an object 'state' in interface 'History'
@@ -79,7 +85,12 @@
   var removeEvent = global[removeEventListenerName];
   var dispatch = global[dispatchEventName];
   // default settings
-  var settings = {"basepath": '/', "redirect": 0, "type": '/', "init": 0};
+  var settings = {
+    "basepath": '/',
+    "redirect": 0,
+    "type": '/',
+    "init": 0
+  };
   // key for the sessionStorage
   var sessionStorageKey = '__historyAPI__';
   // Anchor Element for parseURL function
@@ -169,8 +180,7 @@
         } else if (path != basepath) {
           path = path.replace(/([^\/])\?/, '$1/?');
           if ((new RegExp("^" + basepath, "i")).test(path)) {
-            windowLocation.replace(basepath + '#' + path.
-              replace(new RegExp("^" + basepath, "i"), settings["type"]) + windowLocation.hash);
+            windowLocation.replace(basepath + '#' + path.replace(new RegExp("^" + basepath, "i"), settings["type"]) + windowLocation.hash);
           }
         }
       }
@@ -242,7 +252,7 @@
       get: function() {
         if (typeof stateStorage[windowLocation.href] === 'object') {
           return JSON.parse(JSON.stringify(stateStorage[windowLocation.href]));
-        } else if(typeof stateStorage[windowLocation.href] !== 'undefined') {
+        } else if (typeof stateStorage[windowLocation.href] !== 'undefined') {
           return stateStorage[windowLocation.href];
         } else {
           return null;
@@ -313,7 +323,7 @@
           return customOrigin;
         }
         if (!windowLocation.origin) {
-          return windowLocation.protocol + "//" + windowLocation.hostname + (windowLocation.port ? ':' + windowLocation.port: '');
+          return windowLocation.protocol + "//" + windowLocation.hostname + (windowLocation.port ? ':' + windowLocation.port : '');
         }
         return windowLocation.origin;
       },
@@ -416,23 +426,21 @@
     var re = /(?:([a-zA-Z0-9\-]+\:))?(?:\/\/(?:[^@]*@)?([^\/:\?#]+)(?::([0-9]+))?)?([^\?#]*)(?:(\?[^#]+)|\?)?(?:(#.*))?/;
     if (href !== null && href !== '' && !isWindowLocation) {
       var current = parseURL(),
-          base = document.getElementsByTagName('base')[0];
+        base = document.getElementsByTagName('base')[0];
       if (!isNotAPI && base && base.getAttribute('href')) {
         // Fix for IE ignoring relative base tags.
         // See http://stackoverflow.com/questions/3926197/html-base-tag-and-local-folder-path-with-internet-explorer
         base.href = base.href;
         current = parseURL(base.href, null, true);
       }
-      var _pathname = current._pathname, _protocol = current._protocol;
+      var _pathname = current._pathname,
+        _protocol = current._protocol;
       // convert to type of string
       href = '' + href;
       // convert relative link to the absolute
-      href = /^(?:\w+\:)?\/\//.test(href) ? href.indexOf("/") === 0
-        ? _protocol + href : href : _protocol + "//" + current._host + (
-        href.indexOf("/") === 0 ? href : href.indexOf("?") === 0
-          ? _pathname + href : href.indexOf("#") === 0
-          ? _pathname + current._search + href : _pathname.replace(/[^\/]+$/g, '') + href
-        );
+      href = /^(?:\w+\:)?\/\//.test(href) ? href.indexOf("/") === 0 ? _protocol + href : href : _protocol + "//" + current._host + (
+        href.indexOf("/") === 0 ? href : href.indexOf("?") === 0 ? _pathname + href : href.indexOf("#") === 0 ? _pathname + current._search + href : _pathname.replace(/[^\/]+$/g, '') + href
+      );
     } else {
       href = isWindowLocation ? href : windowLocation.href;
       // if current browser not support History-API
@@ -441,8 +449,7 @@
         href = href.replace(/^[^#]*/, '') || "#";
         // form the absolute link from the hash
         // https://github.com/devote/HTML5-History-API/issues/50
-        href = windowLocation.protocol.replace(/:.*$|$/, ':') + '//' + windowLocation.host + settings['basepath']
-          + href.replace(new RegExp("^#[\/]?(?:" + settings["type"] + ")?"), "");
+        href = windowLocation.protocol.replace(/:.*$|$/, ':') + '//' + windowLocation.host + settings['basepath'] + href.replace(new RegExp("^#[\/]?(?:" + settings["type"] + ")?"), "");
       }
     }
     // that would get rid of the links of the form: /../../
@@ -481,16 +488,15 @@
    * Detect HistoryAPI support while taking into account false positives.
    * Based on https://github.com/Modernizr/Modernizr/blob/master/feature-detects/history.js
    */
-  function isSupportHistoryAPIDetect(){
+  function isSupportHistoryAPIDetect() {
     var ua = global.navigator.userAgent;
     // We only want Android 2 and 4.0, stock browser, and not Chrome which identifies
     // itself as 'Mobile Safari' as well, nor Windows Phone (issue #1471).
     if ((ua.indexOf('Android 2.') !== -1 ||
-      (ua.indexOf('Android 4.0') !== -1)) &&
+        (ua.indexOf('Android 4.0') !== -1)) &&
       ua.indexOf('Mobile Safari') !== -1 &&
       ua.indexOf('Chrome') === -1 &&
-      ua.indexOf('Windows Phone') === -1)
-    {
+      ua.indexOf('Windows Phone') === -1) {
       return false;
     }
     // Return the regular check
@@ -512,7 +518,7 @@
       sessionStorage = global['sessionStorage'];
       sessionStorage.setItem(sessionStorageKey + 't', '1');
       sessionStorage.removeItem(sessionStorageKey + 't');
-    } catch(_e_) {
+    } catch (_e_) {
       sessionStorage = {
         getItem: function(key) {
           var cookie = document.cookie.split(key + "=");
@@ -521,9 +527,12 @@
         setItem: function(key, value) {
           var state = {};
           // insert one current element to cookie
-          if (state[windowLocation.href] = historyObject.state) {
-            document.cookie = key + '=' + JSON.stringify(state);
-          }
+          try {
+            historyObject.state;
+            if (state[windowLocation.href] = historyObject.state) {
+              document.cookie = key + '=' + JSON.stringify(state);
+            }
+          } catch(e) {}
         }
       }
     }
@@ -531,7 +540,7 @@
     try {
       // get cache from the storage in browser
       stateStorage = JSON.parse(sessionStorage.getItem(sessionStorageKey)) || {};
-    } catch(_e_) {
+    } catch (_e_) {
       stateStorage = {};
     }
 
@@ -559,18 +568,24 @@
     var testOnly = 0;
     // test only if descriptor is undefined
     if (!descriptor) {
-      descriptor = {set: emptyFunction};
+      descriptor = {
+        set: emptyFunction
+      };
       testOnly = 1;
     }
     // variable will have a value of true the success of attempts to set descriptors
     var isDefinedSetter = !descriptor.set;
     var isDefinedGetter = !descriptor.get;
     // for tests of attempts to set descriptors
-    var test = {configurable: true, set: function() {
-      isDefinedSetter = 1;
-    }, get: function() {
-      isDefinedGetter = 1;
-    }};
+    var test = {
+      configurable: true,
+      set: function() {
+        isDefinedSetter = 1;
+      },
+      get: function() {
+        isDefinedGetter = 1;
+      }
+    };
 
     try {
       // testing for the possibility of overriding/adding properties
@@ -579,8 +594,7 @@
       object[prop] = object[prop];
       // attempt to override property using the standard method
       defineProperty(object, prop, descriptor);
-    } catch(_e_) {
-    }
+    } catch (_e_) {}
 
     // If the variable 'isDefined' has a false value, it means that need to try other methods
     if (!isDefinedSetter || !isDefinedGetter) {
@@ -607,8 +621,7 @@
             var originalValue = object[prop];
             // set null to built-in(native) property
             object[prop] = null;
-          } catch(_e_) {
-          }
+          } catch (_e_) {}
           // This rule for Internet Explorer 8
           if ('execScript' in global) {
             /**
@@ -625,8 +638,10 @@
                * with the set 'configurable: false', working
                * in the hack 'Safari' to 'Mac'
                */
-              defineProperty(object, prop, {value: emptyFunction});
-            } catch(_e_) {
+              defineProperty(object, prop, {
+                value: emptyFunction
+              });
+            } catch (_e_) {
               if (prop === 'onpopstate') {
                 /**
                  * window.onpopstate fires twice in Safari 8.0.
@@ -658,7 +673,7 @@
               // wrap the object in a new empty object
               var temp = Object.create(object);
               defineProperty(Object.getPrototypeOf(temp) === object ? temp : object, prop, descriptor);
-              for(var key in object) {
+              for (var key in object) {
                 // need to bind a function to the original object
                 if (typeof object[key] === 'function') {
                   temp[key] = object[key].bind(object);
@@ -667,14 +682,13 @@
               try {
                 // to run a function that will inform about what the object was to wrapped
                 onWrapped.call(temp, temp, object);
-              } catch(_e_) {
-              }
+              } catch (_e_) {}
               object = temp;
-            } catch(_e_) {
+            } catch (_e_) {
               // sometimes works override simply by assigning the prototype property of the constructor
               defineProperty(object.constructor.prototype, prop, descriptor);
             }
-          } catch(_e_) {
+          } catch (_e_) {
             // all methods have failed
             return false;
           }
@@ -742,7 +756,7 @@
   function removeEventListener(event, listener, capture) {
     var list = eventsList[event];
     if (list) {
-      for(var i = list.length; i--;) {
+      for (var i = list.length; i--;) {
         if (list[i] === listener) {
           list.splice(i, 1);
           break;
@@ -768,7 +782,7 @@
       eventObject = typeof event === "string" ? eventObject : event;
       if (eventObject.target == null) {
         // need to override some of the properties of the Event object
-        for(var props = ['target', 'currentTarget', 'srcElement', 'type']; event = props.pop();) {
+        for (var props = ['target', 'currentTarget', 'srcElement', 'type']; event = props.pop();) {
           // use 'redefineProperty' to override the properties
           eventObject = redefineProperty(eventObject, event, {
             get: event === 'type' ? function() {
@@ -781,11 +795,10 @@
       }
       if (triggerEventsInWindowAttributes) {
         // run function defined in the attributes 'onpopstate/onhashchange' in the 'window' context
-        ((eventType === 'popstate' ? global.onpopstate : global.onhashchange)
-          || emptyFunction).call(global, eventObject);
+        ((eventType === 'popstate' ? global.onpopstate : global.onhashchange) || emptyFunction).call(global, eventObject);
       }
       // run other functions that are in the list of handlers
-      for(var i = 0, len = list.length; i < len; i++) {
+      for (var i = 0, len = list.length; i < len; i++) {
         list[i].call(global, eventObject);
       }
       return true;
@@ -804,7 +817,11 @@
     } else {
       o.type = 'popstate';
     }
-    o.state = historyObject.state;
+    try {
+      o.state = historyObject.state;
+    } catch (e) {
+
+    }
     // send a newly created events to be processed
     dispatchEvent(o);
   }
@@ -907,9 +924,15 @@
         // for Safari browser in OS Windows not implemented 'state' object in 'History' interface
         // and not implemented in old HTML4 browsers
         if (!isSupportStateObjectInHistory) {
-          e = redefineProperty(e, 'state', {get: function() {
-            return historyObject.state;
-          }});
+          e = redefineProperty(e, 'state', {
+            get: function() {
+              try {
+                return historyObject.state;
+              } catch(e) {
+                return null;
+              }
+            }
+          });
         }
         // send events to be processed
         dispatchEvent(e);
@@ -973,8 +996,7 @@
     var target = document.getElementById(hash = (hash || '').replace(/^#/, ''));
     if (target && target.id === hash && target.nodeName === "A") {
       var rect = target.getBoundingClientRect();
-      global.scrollTo((documentElement.scrollLeft || 0), rect.top + (documentElement.scrollTop || 0)
-        - (documentElement.clientTop || 0));
+      global.scrollTo((documentElement.scrollLeft || 0), rect.top + (documentElement.scrollTop || 0) - (documentElement.clientTop || 0));
     }
   }
 
@@ -1009,8 +1031,8 @@
     }
 
     // initializing descriptors
-    for(var i = 0; i < data.length; i += 2) {
-      for(var prop in data[i]) {
+    for (var i = 0; i < data.length; i += 2) {
+      for (var prop in data[i]) {
         if (data[i].hasOwnProperty(prop)) {
           if (typeof data[i][prop] !== 'object') {
             // If the descriptor is a simple function, simply just assign it an object
@@ -1020,12 +1042,12 @@
             var descriptor = prepareDescriptorsForObject(data[i], prop, data[i][prop]);
             // try to set the descriptor object
             if (!redefineProperty(data[i + 1], prop, descriptor, function(n, o) {
-              // is satisfied if the failed override property
-              if (o === historyObject) {
-                // the problem occurs in Safari on the Mac
-                global.history = historyObject = data[i + 1] = n;
-              }
-            })) {
+                // is satisfied if the failed override property
+                if (o === historyObject) {
+                  // the problem occurs in Safari on the Mac
+                  global.history = historyObject = data[i + 1] = n;
+                }
+              })) {
               // if there is no possibility override.
               // This browser does not support descriptors, such as IE7
 
