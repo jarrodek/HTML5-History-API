@@ -75,15 +75,8 @@
 
   // symlink to method 'history.pushState'
   var historyPushState;
-  try {
-    historyPushState = windowHistory.pushState;
-  } catch (e) {};
-
   // symlink to method 'history.replaceState'
   var historyReplaceState;
-  try {
-    historyReplaceState = windowHistory.replaceState;
-  } catch (e) {};
 
   // if the browser supports HTML5-History-API
   var isSupportHistoryAPI = isSupportHistoryAPIDetect();
@@ -549,48 +542,7 @@
    * Initializing storage for the custom state's object
    */
   function storageInitialize() {
-    var sessionStorage;
-    /**
-     * sessionStorage throws error when cookies are disabled
-     * Chrome content settings when running the site in a Facebook IFrame.
-     * see: https://github.com/devote/HTML5-History-API/issues/34
-     * and: http://stackoverflow.com/a/12976988/669360
-     */
-    try {
-      sessionStorage = global.sessionStorage;
-      sessionStorage.setItem(sessionStorageKey + 't', '1');
-      sessionStorage.removeItem(sessionStorageKey + 't');
-    } catch (_e_) {
-      sessionStorage = {
-        getItem: function(key) {
-          var cookie = document.cookie.split(key + '=');
-          return cookie.length > 1 && cookie.pop().split(';').shift() || 'null';
-        },
-        setItem: function(key, value) {
-          var state = {};
-          // insert one current element to cookie
-          try {
-            historyObject.state;
-            if (state[windowLocation.href] = historyObject.state) {
-              document.cookie = key + '=' + JSON.stringify(state);
-            }
-          } catch (e) {}
-        }
-      };
-    }
 
-    try {
-      // get cache from the storage in browser
-      stateStorage = JSON.parse(sessionStorage.getItem(sessionStorageKey)) || {};
-    } catch (_e_) {
-      stateStorage = {};
-    }
-
-    // hang up the event handler to event unload page
-    addEvent(eventNamePrefix + 'unload', function() {
-      // save current state's object
-      sessionStorage.setItem(sessionStorageKey, JSON.stringify(stateStorage));
-    }, false);
   }
 
   /**
@@ -863,11 +815,6 @@
     } else {
       o.type = 'popstate';
     }
-    try {
-      o.state = historyObject.state;
-    } catch (e) {
-
-    }
     // send a newly created events to be processed
     dispatchEvent(o);
   }
@@ -978,11 +925,7 @@
         if (!isSupportStateObjectInHistory) {
           e = redefineProperty(e, 'state', {
             get: function() {
-              try {
-                return historyObject.state;
-              } catch (e) {
-                return null;
-              }
+              return null;
             }
           });
         }
@@ -1136,11 +1079,6 @@
     if (settings.init) {
       // You agree that you will use window.history.location instead window.location
       isUsedHistoryLocationFlag = 1;
-    }
-
-    // If browser does not support object 'state' in interface 'History'
-    if (!isSupportStateObjectInHistory && JSON) {
-      storageInitialize();
     }
 
     // track clicks on anchors
