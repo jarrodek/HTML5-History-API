@@ -460,9 +460,7 @@
    * @return {Object}
    */
   function parseURL(href, isWindowLocation, isNotAPI) {
-    var s = '(?:([a-zA-Z0-9\-]+\:))?(?:\/\/(?:[^@]*@)?([^\/:\?#]+)(?::([0-9]+))?)?([^\?#]*)' +
-      '(?:(\?[^#]+)|\?)?(?:(#.*))?';
-    var re = new RegExp(s);
+    var re = /(?:([a-zA-Z0-9\-]+\:))?(?:\/\/(?:[^@]*@)?([^\/:\?#]+)(?::([0-9]+))?)?([^\?#]*)(?:(\?[^#]+)|\?)?(?:(#.*))?/;
     if (!!href && href !== '' && !isWindowLocation) {
       var current = parseURL();
       var base = document.getElementsByTagName('base')[0];
