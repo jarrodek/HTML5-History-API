@@ -13,24 +13,29 @@
  *
  * Update: 2015-12-22 14:26
  */
+
 (function(factory) {
-  if (typeof define === 'function' && define['amd']) {
+  if (typeof define === 'function' && define.amd) {
     // https://github.com/devote/HTML5-History-API/issues/73
     var rndKey = '[history' + (new Date()).getTime() + ']';
-    var onError = requirejs['onError'];
+    var onError = requirejs.onError;
+
     factory.toString = function() {
       return rndKey;
     };
-    requirejs['onError'] = function(err) {
+
+    requirejs.onError = function(err) {
       if (err.message.indexOf(rndKey) === -1) {
         onError.call(requirejs, err);
       }
     };
+
     define([], factory);
   }
+
   // commonJS support
-  if (typeof exports === "object" && typeof module !== "undefined") {
-    module['exports'] = factory();
+  if (typeof exports === 'object' && typeof module !== 'undefined') {
+    module.exports = factory();
   } else {
     // execute anyway
     return factory();
@@ -38,46 +43,72 @@
 })(function() {
   // Define global variable
   var global = (typeof window === 'object' ? window : this) || {};
-  // Prevent the code from running if there is no window.history object or library already loaded
-  if (!global.history || "emulate" in global.history) return global.history;
+
+  /**
+   * Prevent the code from running if there is no window.history object or
+   * library already loaded
+   */
+  if (!global.history || 'emulate' in global.history) {
+    return global.history;
+  }
+
   // symlink to document
   var document = global.document;
+
   // HTML element
   var documentElement = document.documentElement;
+
   // symlink to constructor of Object
-  var Object = global['Object'];
+  var Object = global.Object;
+
   // symlink to JSON Object
-  var JSON = global['JSON'];
+  var JSON = global.JSON;
+
   // symlink to instance object of 'Location'
   var windowLocation = global.location;
+
   // symlink to instance object of 'History'
   var windowHistory = global.history;
+
   // new instance of 'History'. The default is a reference to the original object instance
   var historyObject = windowHistory;
+
   // symlink to method 'history.pushState'
   var historyPushState;
   try {
     historyPushState = windowHistory.pushState;
   } catch (e) {};
+
   // symlink to method 'history.replaceState'
   var historyReplaceState;
   try {
     historyReplaceState = windowHistory.replaceState;
   } catch (e) {};
+
   // if the browser supports HTML5-History-API
   var isSupportHistoryAPI = isSupportHistoryAPIDetect();
+
   // verifies the presence of an object 'state' in interface 'History'
   var isSupportStateObjectInHistory = 'state' in windowHistory;
+
   // symlink to method 'Object.defineProperty'
   var defineProperty = Object.defineProperty;
-  // new instance of 'Location', for IE8 will use the element HTMLAnchorElement, instead of pure object
+
+  // new instance of 'Location', for IE8 will use the element HTMLAnchorElement,
+  // instead of pure object
   var locationObject = redefineProperty({}, 't') ? {} : document.createElement('a');
+
   // prefix for the names of events
   var eventNamePrefix = '';
+
   // String that will contain the name of the method
-  var addEventListenerName = global.addEventListener ? 'addEventListener' : (eventNamePrefix = 'on') && 'attachEvent';
+  var addEventListenerName = global.addEventListener ?
+    'addEventListener' : (eventNamePrefix = 'on') && 'attachEvent';
+
   // String that will contain the name of the method
-  var removeEventListenerName = global.removeEventListener ? 'removeEventListener' : 'detachEvent';
+  var removeEventListenerName = global.removeEventListener ?
+    'removeEventListener' : 'detachEvent';
+
   // String that will contain the name of the method
   var dispatchEventName = global.dispatchEvent ? 'dispatchEvent' : 'fireEvent';
   // reference native methods for the events
@@ -86,10 +117,10 @@
   var dispatch = global[dispatchEventName];
   // default settings
   var settings = {
-    "basepath": '/',
-    "redirect": 0,
-    "type": '/',
-    "init": 0
+    'basepath': '/',
+    'redirect': 0,
+    'type': '/',
+    'init': 0
   };
   // key for the sessionStorage
   var sessionStorageKey = '__historyAPI__';
@@ -121,8 +152,8 @@
    * @type {Object}
    */
   var eventsDescriptors = {
-    "onhashchange": null,
-    "onpopstate": null
+    'onhashchange': null,
+    'onpopstate': null
   };
 
   /**
@@ -155,32 +186,33 @@
      * @param {null|String} [type] Substitute the string after the anchor; by default "/".
      * @param {null|Boolean} [redirect] Enable link translation.
      */
-    "setup": function(basepath, type, redirect) {
-      settings["basepath"] = ('' + (basepath == null ? settings["basepath"] : basepath))
+    setup: function(basepath, type, redirect) {
+      settings.basepath = ('' + (basepath == null ? settings.basepath : basepath))
         .replace(/(?:^|\/)[^\/]*$/, '/');
-      settings["type"] = type == null ? settings["type"] : type;
-      settings["redirect"] = redirect == null ? settings["redirect"] : !!redirect;
+      settings.type = type == null ? settings.type : type;
+      settings.redirect = redirect == null ? settings.redirect : !!redirect;
     },
     /**
      * @namespace history
      * @param {String} [type]
      * @param {String} [basepath]
      */
-    "redirect": function(type, basepath) {
-      historyObject['setup'](basepath, type);
-      basepath = settings["basepath"];
+    redirect: function(type, basepath) {
+      historyObject.setup(basepath, type);
+      basepath = settings.basepath;
       if (global.top == global.self) {
         var relative = parseURL(null, false, true)._relative;
         var path = windowLocation.pathname + windowLocation.search;
         if (isSupportHistoryAPI) {
           path = path.replace(/([^\/])$/, '$1/');
-          if (relative != basepath && (new RegExp("^" + basepath + "$", "i")).test(path)) {
+          if (relative != basepath && (new RegExp('^' + basepath + '$', 'i')).test(path)) {
             windowLocation.replace(relative);
           }
         } else if (path != basepath) {
           path = path.replace(/([^\/])\?/, '$1/?');
-          if ((new RegExp("^" + basepath, "i")).test(path)) {
-            windowLocation.replace(basepath + '#' + path.replace(new RegExp("^" + basepath, "i"), settings["type"]) + windowLocation.hash);
+          if ((new RegExp('^' + basepath, 'i')).test(path)) {
+            windowLocation.replace(basepath + '#' +
+              path.replace(new RegExp('^' + basepath, 'i'), settings.type) + windowLocation.hash);
           }
         }
       }
@@ -232,13 +264,17 @@
      *
      * @namespace history
      */
-    "location": {
+    location: {
       set: function(value) {
-        if (isUsedHistoryLocationFlag === 0) isUsedHistoryLocationFlag = 1;
+        if (isUsedHistoryLocationFlag === 0) {
+          isUsedHistoryLocationFlag = 1;
+        }
         global.location = value;
       },
       get: function() {
-        if (isUsedHistoryLocationFlag === 0) isUsedHistoryLocationFlag = 1;
+        if (isUsedHistoryLocationFlag === 0) {
+          isUsedHistoryLocationFlag = 1;
+        }
         return locationObject;
       }
     },
@@ -248,7 +284,7 @@
      *
      * @namespace history
      */
-    "state": {
+    state: {
       get: function() {
         if (typeof stateStorage[windowLocation.href] === 'object') {
           return JSON.parse(JSON.stringify(stateStorage[windowLocation.href]));
@@ -317,13 +353,14 @@
      *
      * @namespace history.location
      */
-    "origin": {
+    origin: {
       get: function() {
         if (customOrigin !== void 0) {
           return customOrigin;
         }
         if (!windowLocation.origin) {
-          return windowLocation.protocol + "//" + windowLocation.hostname + (windowLocation.port ? ':' + windowLocation.port : '');
+          return windowLocation.protocol + '//' + windowLocation.hostname + (windowLocation.port ?
+            ':' + windowLocation.port : '');
         }
         return windowLocation.origin;
       },
@@ -337,7 +374,7 @@
      *
      * @namespace history.location
      */
-    "href": isSupportHistoryAPI ? null : {
+    href: isSupportHistoryAPI ? null : {
       get: function() {
         return parseURL()._href;
       }
@@ -347,31 +384,31 @@
      *
      * @namespace history.location
      */
-    "protocol": null,
+    protocol: null,
     /**
      * Returns the current page's host and port number.
      *
      * @namespace history.location
      */
-    "host": null,
+    host: null,
     /**
      * Returns the current page's host.
      *
      * @namespace history.location
      */
-    "hostname": null,
+    hostname: null,
     /**
      * Returns the current page's port number.
      *
      * @namespace history.location
      */
-    "port": null,
+    port: null,
     /**
      * Returns the current page's path only.
      *
      * @namespace history.location
      */
-    "pathname": isSupportHistoryAPI ? null : {
+    pathname: isSupportHistoryAPI ? null : {
       get: function() {
         return parseURL()._pathname;
       }
@@ -383,7 +420,7 @@
      *
      * @namespace history.location
      */
-    "search": isSupportHistoryAPI ? null : {
+    search: isSupportHistoryAPI ? null : {
       get: function() {
         return parseURL()._search;
       }
@@ -395,7 +432,7 @@
      *
      * @namespace history.location
      */
-    "hash": isSupportHistoryAPI ? null : {
+    hash: isSupportHistoryAPI ? null : {
       set: function(value) {
         changeState(null, ('' + value).replace(/^(#|)/, '#'), false, lastURL);
       },
@@ -423,33 +460,39 @@
    * @return {Object}
    */
   function parseURL(href, isWindowLocation, isNotAPI) {
-    var re = /(?:([a-zA-Z0-9\-]+\:))?(?:\/\/(?:[^@]*@)?([^\/:\?#]+)(?::([0-9]+))?)?([^\?#]*)(?:(\?[^#]+)|\?)?(?:(#.*))?/;
-    if (href !== null && href !== '' && !isWindowLocation) {
-      var current = parseURL(),
-        base = document.getElementsByTagName('base')[0];
+    var s = '(?:([a-zA-Z0-9\-]+\:))?(?:\/\/(?:[^@]*@)?([^\/:\?#]+)(?::([0-9]+))?)?([^\?#]*)' +
+      '(?:(\?[^#]+)|\?)?(?:(#.*))?';
+    var re = new RegExp(s);
+    if (!!href && href !== '' && !isWindowLocation) {
+      var current = parseURL();
+      var base = document.getElementsByTagName('base')[0];
       if (!isNotAPI && base && base.getAttribute('href')) {
-        // Fix for IE ignoring relative base tags.
-        // See http://stackoverflow.com/questions/3926197/html-base-tag-and-local-folder-path-with-internet-explorer
         base.href = base.href;
         current = parseURL(base.href, null, true);
       }
-      var _pathname = current._pathname,
-        _protocol = current._protocol;
+      var _pathname = current._pathname;
+      var _protocol = current._protocol;
       // convert to type of string
       href = '' + href;
       // convert relative link to the absolute
-      href = /^(?:\w+\:)?\/\//.test(href) ? href.indexOf("/") === 0 ? _protocol + href : href : _protocol + "//" + current._host + (
-        href.indexOf("/") === 0 ? href : href.indexOf("?") === 0 ? _pathname + href : href.indexOf("#") === 0 ? _pathname + current._search + href : _pathname.replace(/[^\/]+$/g, '') + href
+      href = /^(?:\w+\:)?\/\//.test(href) ?
+        href.indexOf('/') === 0 ?
+          _protocol + href : href
+        : _protocol + '//' + current._host + (href.indexOf('/') === 0 ?
+          href : href.indexOf('?') === 0 ?
+            _pathname + href : href.indexOf('#') === 0 ?
+              _pathname + current._search + href : _pathname.replace(/[^\/]+$/g, '') + href
       );
     } else {
       href = isWindowLocation ? href : windowLocation.href;
       // if current browser not support History-API
       if (!isSupportHistoryAPI || isNotAPI) {
         // get hash fragment
-        href = href.replace(/^[^#]*/, '') || "#";
+        href = href.replace(/^[^#]*/, '') || '#';
         // form the absolute link from the hash
         // https://github.com/devote/HTML5-History-API/issues/50
-        href = windowLocation.protocol.replace(/:.*$|$/, ':') + '//' + windowLocation.host + settings['basepath'] + href.replace(new RegExp("^#[\/]?(?:" + settings["type"] + ")?"), "");
+        href = windowLocation.protocol.replace(/:.*$|$/, ':') + '//' + windowLocation.host +
+          settings.basepath + href.replace(new RegExp('^#[\/]?(?:' + settings.type + ')?'), '');
       }
     }
     // that would get rid of the links of the form: /../../
@@ -467,7 +510,8 @@
     // relative link, no protocol, no host
     var relative = pathname + search + hash;
     // special links for set to hash-link, if browser not support History API
-    var nohash = pathname.replace(new RegExp("^" + settings["basepath"], "i"), settings["type"]) + search;
+    var nohash = pathname.replace(new RegExp('^' + settings.basepath, 'i'), settings.type) +
+      search;
     // result
     return {
       _href: result[1] + '//' + host + relative,
@@ -481,7 +525,7 @@
       _relative: relative,
       _nohash: nohash,
       _special: nohash + hash
-    }
+    };
   }
 
   /**
@@ -515,14 +559,14 @@
      * and: http://stackoverflow.com/a/12976988/669360
      */
     try {
-      sessionStorage = global['sessionStorage'];
+      sessionStorage = global.sessionStorage;
       sessionStorage.setItem(sessionStorageKey + 't', '1');
       sessionStorage.removeItem(sessionStorageKey + 't');
     } catch (_e_) {
       sessionStorage = {
         getItem: function(key) {
-          var cookie = document.cookie.split(key + "=");
-          return cookie.length > 1 && cookie.pop().split(";").shift() || 'null';
+          var cookie = document.cookie.split(key + '=');
+          return cookie.length > 1 && cookie.pop().split(';').shift() || 'null';
         },
         setItem: function(key, value) {
           var state = {};
@@ -532,9 +576,9 @@
             if (state[windowLocation.href] = historyObject.state) {
               document.cookie = key + '=' + JSON.stringify(state);
             }
-          } catch(e) {}
+          } catch (e) {}
         }
-      }
+      };
     }
 
     try {
@@ -629,8 +673,8 @@
              * VBScript, declaring it in global scope with
              * the same names.
              */
-            global['execScript']('Public ' + prop, 'VBScript');
-            global['execScript']('var ' + prop + ';', 'JavaScript');
+            global.execScript('Public ' + prop, 'VBScript');
+            global.execScript('var ' + prop + ';', 'JavaScript');
           } else {
             try {
               /**
@@ -672,7 +716,8 @@
             try {
               // wrap the object in a new empty object
               var temp = Object.create(object);
-              defineProperty(Object.getPrototypeOf(temp) === object ? temp : object, prop, descriptor);
+              defineProperty(Object.getPrototypeOf(temp) === object ?
+                temp : object, prop, descriptor);
               for (var key in object) {
                 // need to bind a function to the original object
                 if (typeof object[key] === 'function') {
@@ -685,7 +730,8 @@
               } catch (_e_) {}
               object = temp;
             } catch (_e_) {
-              // sometimes works override simply by assigning the prototype property of the constructor
+              // sometimes works override simply by assigning the prototype
+              // property of the constructor
               defineProperty(object.constructor.prototype, prop, descriptor);
             }
           } catch (_e_) {
@@ -775,11 +821,12 @@
    * @return {Boolean} If 'preventDefault' was called the value is false, else the value is true.
    */
   function dispatchEvent(event, eventObject) {
-    var eventType = ('' + (typeof event === "string" ? event : event.type)).replace(/^on/, '');
+    var eventType = ('' + (typeof event === 'string' ?
+      event : event.type)).replace(/^on/, '');
     var list = eventsList[eventType];
     if (list) {
       // need to understand that there is one object of Event
-      eventObject = typeof event === "string" ? eventObject : event;
+      eventObject = typeof event === 'string' ? eventObject : event;
       if (eventObject.target == null) {
         // need to override some of the properties of the Event object
         for (var props = ['target', 'currentTarget', 'srcElement', 'type']; event = props.pop();) {
@@ -795,7 +842,8 @@
       }
       if (triggerEventsInWindowAttributes) {
         // run function defined in the attributes 'onpopstate/onhashchange' in the 'window' context
-        ((eventType === 'popstate' ? global.onpopstate : global.onhashchange) || emptyFunction).call(global, eventObject);
+        ((eventType === 'popstate' ? global.onpopstate : global.onhashchange) ||
+          emptyFunction).call(global, eventObject);
       }
       // run other functions that are in the list of handlers
       for (var i = 0, len = list.length; i < len; i++) {
@@ -848,16 +896,19 @@
   function changeState(state, url, replace, lastURLValue) {
     if (!isSupportHistoryAPI) {
       // if not used implementation history.location
-      if (isUsedHistoryLocationFlag === 0) isUsedHistoryLocationFlag = 2;
+      if (isUsedHistoryLocationFlag === 0) {
+        isUsedHistoryLocationFlag = 2;
+      }
       // normalization url
-      var urlObject = parseURL(url, isUsedHistoryLocationFlag === 2 && ('' + url).indexOf("#") !== -1);
+      var urlObject = parseURL(url, isUsedHistoryLocationFlag === 2 &&
+        ('' + url).indexOf('#') !== -1);
       // if current url not equal new url
       if (urlObject._relative !== parseURL()._relative) {
         // if empty lastURLValue to skip hash change event
         lastURL = lastURLValue;
         if (replace) {
           // only replace hash, not store to history
-          windowLocation.replace("#" + urlObject._special);
+          windowLocation.replace('#' + urlObject._special);
         } else {
           // change hash and add new record to history
           windowLocation.hash = urlObject._special;
@@ -885,10 +936,12 @@
     lastURL = windowLocation.href;
     // if not empty fireNow, otherwise skipped the current handler event
     if (fireNow) {
-      // if checkUrlForPopState equal current url, this means that the event was raised popstate browser
+      // if checkUrlForPopState equal current url, this means that the event was raised
+      // popstate browser
       if (checkUrlForPopState !== windowLocation.href) {
         // otherwise,
-        // the browser does not support popstate event or just does not run the event by changing the hash.
+        // the browser does not support popstate event or just does not run the event by
+        // changing the hash.
         firePopState();
       }
       // current event object
@@ -919,7 +972,8 @@
     setTimeout(function() {
       // hang up the event handler for the built-in popstate event in the browser
       addEvent('popstate', function(e) {
-        // set the current url, that suppress the creation of the popstate event by changing the hash
+        // set the current url, that suppress the creation of the popstate event by changing
+        // the hash
         checkUrlForPopState = windowLocation.href;
         // for Safari browser in OS Windows not implemented 'state' object in 'History' interface
         // and not implemented in old HTML4 browsers
@@ -928,7 +982,7 @@
             get: function() {
               try {
                 return historyObject.state;
-              } catch(e) {
+              } catch (e) {
                 return null;
               }
             }
@@ -939,7 +993,7 @@
       }, false);
     }, 0);
     // for non-HTML5 browsers
-    if (!isSupportHistoryAPI && noScroll !== true && "location" in historyObject) {
+    if (!isSupportHistoryAPI && noScroll !== true && 'location' in historyObject) {
       // scroll window to anchor element
       scrollToAnchorId(locationObject.hash);
       // fire initial state for non-HTML5 browser after load page
@@ -955,7 +1009,9 @@
    */
   function anchorTarget(target) {
     while (target) {
-      if (target.nodeName === 'A') return target;
+      if (target.nodeName === 'A') {
+        return target;
+      }
       target = target.parentNode;
     }
   }
@@ -968,10 +1024,11 @@
   function onAnchorClick(e) {
     var event = e || global.event;
     var target = anchorTarget(event.target || event.srcElement);
-    var defaultPrevented = "defaultPrevented" in event ? event['defaultPrevented'] : event.returnValue === false;
-    if (target && target.nodeName === "A" && !defaultPrevented) {
+    var defaultPrevented = 'defaultPrevented' in event ?
+      event.defaultPrevented : event.returnValue === false;
+    if (target && target.nodeName === 'A' && !defaultPrevented) {
       var current = parseURL();
-      var expect = parseURL(target.getAttribute("href", 2));
+      var expect = parseURL(target.getAttribute('href', 2));
       var isEqualBaseURL = current._href.split('#').shift() === expect._href.split('#').shift();
       if (isEqualBaseURL && expect._hash) {
         if (current._hash !== expect._hash) {
@@ -994,9 +1051,10 @@
    */
   function scrollToAnchorId(hash) {
     var target = document.getElementById(hash = (hash || '').replace(/^#/, ''));
-    if (target && target.id === hash && target.nodeName === "A") {
+    if (target && target.id === hash && target.nodeName === 'A') {
       var rect = target.getBoundingClientRect();
-      global.scrollTo((documentElement.scrollLeft || 0), rect.top + (documentElement.scrollTop || 0) - (documentElement.clientTop || 0));
+      global.scrollTo((documentElement.scrollLeft || 0), rect.top +
+        (documentElement.scrollTop || 0) - (documentElement.clientTop || 0));
     }
   }
 
@@ -1022,12 +1080,13 @@
     addEvent(eventNamePrefix + 'hashchange', onHashChange, false);
 
     // a list of objects with pairs of descriptors/object
-    var data = [locationDescriptors, locationObject, eventsDescriptors, global, historyDescriptors, historyObject];
+    var data = [locationDescriptors, locationObject, eventsDescriptors,
+      global, historyDescriptors, historyObject];
 
     // if browser support object 'state' in interface 'History'
     if (isSupportStateObjectInHistory) {
       // remove state property from descriptor
-      delete historyDescriptors['state'];
+      delete historyDescriptors.state;
     }
 
     // initializing descriptors
@@ -1068,15 +1127,15 @@
     }
 
     // check settings
-    historyObject['setup']();
+    historyObject.setup();
 
     // redirect if necessary
-    if (settings['redirect']) {
-      historyObject['redirect']();
+    if (settings.redirect) {
+      historyObject.redirect();
     }
 
     // initialize
-    if (settings["init"]) {
+    if (settings.init) {
       // You agree that you will use window.history.location instead window.location
       isUsedHistoryLocationFlag = 1;
     }
@@ -1088,13 +1147,13 @@
 
     // track clicks on anchors
     if (!isSupportHistoryAPI) {
-      document[addEventListenerName](eventNamePrefix + "click", onAnchorClick, false);
+      document[addEventListenerName](eventNamePrefix + 'click', onAnchorClick, false);
     }
 
     if (document.readyState === 'complete') {
       onLoad(true);
     } else {
-      if (!isSupportHistoryAPI && parseURL()._relative !== settings["basepath"]) {
+      if (!isSupportHistoryAPI && parseURL()._relative !== settings.basepath) {
         isFireInitialState = true;
       }
       /**
@@ -1129,7 +1188,7 @@
    * @type {boolean}
    * @const
    */
-  historyObject['emulate'] = !isSupportHistoryAPI;
+  historyObject.emulate = !isSupportHistoryAPI;
 
   /**
    * Replace the original methods on the wrapper
